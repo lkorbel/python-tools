@@ -4,9 +4,9 @@ import os
 import re
 import sys
 
-def camel_case(s):
-    parts = s.split('_')
-    return parts[0] + ''.join(word.capitalize() for word in parts[1:])
+# make first letter big
+def first_big_case(s):
+    return s[0].upper() + s[1:]
 
 def generate_cpp_class(qml_file_path):
     base_name = os.path.splitext(os.path.basename(qml_file_path))[0]
@@ -67,7 +67,7 @@ def generate_cpp_class(qml_file_path):
     # Enum Roles
     h_content += "    enum Roles {\n"
     for prop in properties:
-        h_content += f"        {camel_case(prop)}Role,\n"
+        h_content += f"        {first_big_case(prop)}Role,\n"
     h_content += "    };\n\n"
 
     # Standard methods
@@ -79,7 +79,7 @@ def generate_cpp_class(qml_file_path):
     h_content += "private:\n"
 
     for prop in properties:
-        h_content += f"    QStringList m_{camel_case(prop)}s;\n"
+        h_content += f"    QStringList m_{prop}s;\n"
 
     # (5) Insert method
     insert_args = ", ".join([f"const QString &{prop}" for prop in properties])
@@ -96,28 +96,28 @@ def generate_cpp_class(qml_file_path):
     cpp_content += "// Returns the number of rows in the model\n"
     cpp_content += f"int {class_name}::rowCount(const QModelIndex &parent) const\n{{\n"
     cpp_content += "    if (parent.isValid())\n        return 0;\n"
-    cpp_content += f"    return static_cast<int>(m_{camel_case(properties[0])}s.size());\n}}\n\n"
+    cpp_content += f"    return static_cast<int>(m_{properties[0]}s.size());\n}}\n\n"
 
     cpp_content += "// Returns data for each role\n"
     cpp_content += f"QVariant {class_name}::data(const QModelIndex &index, int role) const\n{{\n"
     cpp_content += "    if (!index.isValid())\n        return QVariant();\n\n"
     for prop in properties:
-        cpp_content += f"    if (role == {camel_case(prop)}Role)\n"
-        cpp_content += f"        return m_{camel_case(prop)}s.at(index.row());\n"
+        cpp_content += f"    if (role == {first_big_case(prop)}Role)\n"
+        cpp_content += f"        return m_{prop}s.at(index.row());\n"
     cpp_content += "\n    return QVariant();\n}\n\n"
 
     cpp_content += "// Returns role names to be used in QML\n"
     cpp_content += f"QHash<int, QByteArray> {class_name}::roleNames() const\n{{\n"
     cpp_content += "    QHash<int, QByteArray> roles;\n"
     for prop in properties:
-        cpp_content += f"    roles[{camel_case(prop)}Role] = \"{prop}\";\n"
+        cpp_content += f"    roles[{first_big_case(prop)}Role] = \"{prop}\";\n"
     cpp_content += "    return roles;\n}\n\n"
 
     # (5) Insert method
     cpp_content += "// Inserts a single entry into the model\n"
     cpp_content += f"void {class_name}::insert({insert_args})\n{{\n"
     for prop in properties:
-        cpp_content += f"    m_{camel_case(prop)}s.append({prop});\n"
+        cpp_content += f"    m_{prop}s.append({prop});\n"
     cpp_content += "}\n\n"
 
     # (6) Populate model by calling insert()
