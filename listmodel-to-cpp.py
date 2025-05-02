@@ -22,7 +22,7 @@ def generate_cpp_class(qml_file_path):
 
     # (2) Find ListElement properties and capture property name and value
     elements = re.findall(r'ListElement\s*{([^}]*)}', content, re.MULTILINE | re.DOTALL)
-
+    num_elements = len(elements)
     if not elements:
         print("Error: No ListElement objects found.")
         sys.exit(1)
@@ -39,8 +39,8 @@ def generate_cpp_class(qml_file_path):
     for prop, val in props:
         values[prop].append(val)
             
-    for idx, element in enumerate(elements,1):
-        props = re.findall(r'(\w+)\s*:\s*(.*)', element)
+    for idx in range(1, num_elements):
+        props = re.findall(r'(\w+)\s*:\s*(.*)', elements[idx])
         current_props = {prop for prop, _ in props}
         if current_props != properties:
             set_difference = properties.symmetric_difference(current_props)
@@ -52,11 +52,6 @@ def generate_cpp_class(qml_file_path):
 
     # convert properties set to list
     properties = sorted(properties)
-    #Assert that all lists have the same length
-    lengths = {len(lst) for lst in values.values()}
-    assert len(lengths) == 1, "Mismatch in value list lengths."
-
-    num_elements = next(iter(lengths))
 
     # Prepare C++ class
     h_content = f"#pragma once\n\n"
